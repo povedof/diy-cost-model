@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DIY Cost Reality Check — GAP Velocity AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --gap-blue: #006489;
+    --gap-dark: #453F3E;
+    --gap-gray: #777373;
+    --gap-light-gray: #D1D1D1;
+    --gap-lighter-gray: #E5E1E6;
+    --gap-yellow: #FEBD12;
+    --gap-blue-alt1: #5497AE;
+    --gap-blue-alt2: #A5CAD6;
+    --gap-blue-alt3: #B6DAE3;
+    --gap-cyan: #18C1E5;
+    --gap-green: #43B686;
+    --gap-red: #E54360;
+    --gap-bg: #F7F8FA;
+    --gap-white: #FFFFFF;
+  }
+
+  body { background: var(--gap-bg); color: var(--gap-dark); font-family: 'Lato', Verdana, sans-serif; min-height: 100vh; }
+
+  /* Header */
+  .header {
+    padding: 0;
+    background: var(--gap-blue);
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 260px; height: 260px;
+    background: radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .header-bar { height: 5px; background: var(--gap-cyan); }
+  .header-inner { max-width: 940px; margin: 0 auto; padding: 36px 36px 32px; position: relative; }
+  .header-logo { font-size: 11px; color: var(--gap-blue-alt2); letter-spacing: 0.25em; text-transform: uppercase; margin-bottom: 6px; font-weight: 700; }
+  .header h1 { font-size: 30px; font-weight: 900; color: var(--gap-white); letter-spacing: -0.01em; text-transform: uppercase; }
+  .header h1 .highlight { color: var(--gap-yellow); }
+  .header p { font-size: 14px; color: var(--gap-blue-alt2); margin-top: 10px; line-height: 1.65; max-width: 560px; font-weight: 400; }
+
+  .main { max-width: 940px; margin: 0 auto; padding: 32px 36px 60px; }
+
+  /* Sections */
+  .section-label { font-size: 11px; color: var(--gap-blue); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 12px; font-weight: 700; }
+
+  /* Stack selector */
+  .stack-buttons { display: flex; gap: 10px; margin-bottom: 8px; }
+  .stack-btn {
+    flex: 1; padding: 16px; background: var(--gap-white); border: 2px solid var(--gap-light-gray);
+    border-radius: 8px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 6px;
+    transition: all 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .stack-btn:hover { border-color: var(--gap-blue-alt1); }
+  .stack-btn.active { border-color: var(--gap-blue); background: var(--gap-blue); }
+  .stack-btn .icon { font-size: 20px; color: var(--gap-blue); }
+  .stack-btn.active .icon { color: var(--gap-yellow); }
+  .stack-btn .label { font-size: 14px; color: var(--gap-dark); font-weight: 700; }
+  .stack-btn.active .label { color: var(--gap-white); }
+  .stack-btn .meta { font-size: 10px; color: var(--gap-gray); display: none; }
+  .stack-btn.active .meta { display: block; color: var(--gap-blue-alt2); }
+  .stack-desc { font-size: 12px; color: var(--gap-gray); font-style: italic; margin-bottom: 32px; }
+
+  /* Inputs panel */
+  .panel { background: var(--gap-white); border-radius: 10px; border: 1px solid #E8E8E8; box-shadow: 0 1px 4px rgba(0,0,0,0.04); padding: 28px; margin-bottom: 24px; }
+  .inputs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 40px; }
+  .slider-group { margin-bottom: 24px; }
+  .slider-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+  .slider-label { font-size: 12px; font-weight: 700; color: var(--gap-blue); letter-spacing: 0.04em; text-transform: uppercase; }
+  .slider-value { font-size: 22px; font-weight: 900; color: var(--gap-dark); }
+  .slider-sub { font-size: 11px; color: var(--gap-gray); margin-bottom: 8px; }
+  input[type="range"] { width: 100%; accent-color: var(--gap-blue); height: 6px; cursor: pointer; }
+  .slider-range { display: flex; justify-content: space-between; font-size: 10px; color: var(--gap-light-gray); margin-top: 4px; font-weight: 700; }
+
+  /* Density */
+  .density-buttons { display: flex; gap: 8px; margin-bottom: 10px; }
+  .density-btn {
+    flex: 1; padding: 12px 10px; background: var(--gap-bg); border: 2px solid transparent;
+    border-radius: 8px; cursor: pointer; text-align: center; transition: all 0.2s;
+  }
+  .density-btn:hover { border-color: var(--gap-blue-alt2); }
+  .density-btn.active { border-color: var(--gap-blue); background: var(--gap-white); }
+  .density-btn .dlabel { font-size: 13px; color: var(--gap-gray); font-weight: 700; }
+  .density-btn.active .dlabel { color: var(--gap-blue); }
+  .density-btn .dfactor { font-size: 10px; color: var(--gap-light-gray); margin-top: 3px; }
+  .density-btn.active .dfactor { color: var(--gap-gray); }
+  .density-tag { font-size: 11px; color: var(--gap-gray); font-style: italic; }
+
+  /* Stat cards */
+  .stats-row { display: flex; gap: 12px; margin-bottom: 28px; }
+  .stat-card { padding: 18px; background: var(--gap-white); border-radius: 10px; border: 1px solid #E8E8E8; flex: 1; min-width: 0; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
+  .stat-card .st-label { font-size: 9px; color: var(--gap-blue); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 6px; font-weight: 700; }
+  .stat-card .st-value { font-size: 22px; font-weight: 900; color: var(--gap-dark); }
+  .stat-card .st-value.accent { color: var(--gap-red); }
+  .stat-card .st-sub { font-size: 11px; color: var(--gap-gray); margin-top: 4px; }
+
+  /* Comparison cards */
+  .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 28px; }
+  .card-diy {
+    padding: 28px; border-radius: 10px; background: var(--gap-white); position: relative; overflow: hidden;
+    border: 2px solid var(--gap-red); box-shadow: 0 2px 8px rgba(229,67,96,0.08);
+  }
+  .card-diy::before { content:''; position:absolute; top:0; left:0; right:0; height:4px; background:var(--gap-red); }
+  .card-pro {
+    padding: 28px; border-radius: 10px; background: var(--gap-white); position: relative; overflow: hidden;
+    border: 2px solid var(--gap-green); box-shadow: 0 2px 8px rgba(67,182,134,0.08);
+  }
+  .card-pro::before { content:''; position:absolute; top:0; left:0; right:0; height:4px; background:var(--gap-green); }
+  .card-badge { position: absolute; top: 16px; right: 16px; font-size: 9px; padding: 3px 10px; border-radius: 4px; letter-spacing: 0.1em; font-weight: 700; }
+  .badge-risk { color: var(--gap-white); background: var(--gap-red); }
+  .badge-managed { color: var(--gap-white); background: var(--gap-green); }
+  .card-type { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 16px; font-weight: 700; }
+  .card-amount { font-size: 36px; font-weight: 900; }
+  .card-meta { font-size: 12px; color: var(--gap-gray); margin-top: 8px; }
+  .savings-box { margin-top: 16px; padding: 12px 16px; background: #E8F8F0; border-radius: 8px; border: 1px solid #C6ECDB; }
+  .savings-amount { font-size: 18px; font-weight: 900; color: var(--gap-green); }
+  .savings-detail { font-size: 11px; color: var(--gap-gray); margin-top: 2px; }
+
+  /* Breakdown toggle */
+  .breakdown-btn { margin-top: 16px; background: none; border: 2px solid var(--gap-red); color: var(--gap-red); padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 11px; letter-spacing: 0.05em; font-weight: 700; font-family: 'Lato', sans-serif; transition: all 0.15s; }
+  .breakdown-btn:hover { background: var(--gap-red); color: var(--gap-white); }
+
+  /* Breakdown panel */
+  .breakdown { animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+  .breakdown-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid #E8E8E8; }
+  .breakdown-row .row-label { font-size: 14px; color: var(--gap-dark); font-weight: 700; }
+  .breakdown-row .row-sub { font-size: 10px; color: var(--gap-gray); margin-top: 2px; font-weight: 400; }
+  .breakdown-row .row-value { font-size: 14px; color: var(--gap-dark); font-weight: 900; }
+
+  /* Risk rows */
+  .risk-row { border-bottom: 1px solid #E8E8E8; padding: 14px 0; cursor: pointer; transition: background 0.15s; }
+  .risk-row:hover { background: var(--gap-bg); }
+  .risk-arrow { color: var(--gap-gray); font-size: 12px; transition: transform 0.2s; display: inline-block; }
+  .risk-arrow.open { transform: rotate(90deg); }
+  .risk-label { font-size: 14px; color: var(--gap-dark); margin-left: 10px; }
+  .risk-bar { height: 6px; border-radius: 3px; transition: width 0.4s; }
+  .risk-cost { font-size: 14px; color: var(--gap-dark); min-width: 70px; text-align: right; font-weight: 900; }
+  .risk-detail { margin: 10px 0 0 22px; padding: 12px 16px; background: var(--gap-bg); border-radius: 8px; border-left: 3px solid var(--gap-blue); font-size: 12px; color: var(--gap-gray); line-height: 1.6; }
+  .risk-pct { margin-top: 6px; color: var(--gap-light-gray); font-size: 11px; font-weight: 700; }
+
+  /* Bottom summary */
+  .summary {
+    padding: 28px 32px; border-radius: 10px; background: var(--gap-blue); text-align: center;
+    position: relative; overflow: hidden;
+  }
+  .summary::after { content:''; position:absolute; bottom:0; left:0; right:0; height:4px; background: var(--gap-cyan); }
+  .summary p { font-size: 14px; color: var(--gap-blue-alt2); line-height: 1.7; max-width: 620px; margin: 0 auto; }
+  .summary strong { color: var(--gap-white); }
+  .summary .red { color: var(--gap-yellow); }
+  .summary .footnote { margin-top: 16px; font-size: 11px; color: var(--gap-blue-alt1); }
+
+  @media (max-width: 700px) {
+    .inputs-grid, .compare-grid { grid-template-columns: 1fr; }
+    .stats-row { flex-wrap: wrap; }
+    .stat-card { min-width: 45%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-bar"></div>
+  <div class="header-inner">
+    <div class="header-logo">GAP Velocity AI</div>
+    <h1>DIY Cost <span class="highlight">Reality Check</span></h1>
+    <p>Your engineers are brilliant. But modernizing legacy code with GenAI isn't a translation problem — it's an archaeology problem. Plug in your lines of code and see what it actually costs.</p>
+    <p>The 2026 Reality: A developer might "write" 2,000 lines with an AI agent in 10 minutes, but they often spend the next 3 days debugging and refining that output.</p>
+  </div>
+</div>
+
+<div class="main">
+  <!-- Stack Selector -->
+  <div>
+    <div class="section-label">Primary Legacy Stack</div>
+    <div class="stack-buttons" id="stackButtons"></div>
+    <div class="stack-desc" id="stackDesc"></div>
+  </div>
+
+  <!-- Inputs -->
+  <div class="panel">
+    <div class="inputs-grid">
+      <div class="slider-group">
+        <div class="slider-header">
+          <label class="slider-label">Lines of Code</label>
+          <span class="slider-value" id="klocValue"></span>
+        </div>
+        <div class="slider-sub">Total KLOC across all legacy modules (1K = 1,000 lines)</div>
+        <input type="range" id="klocSlider" min="10" max="5000" step="10" value="200">
+        <div class="slider-range"><span>10K lines</span><span>5M lines</span></div>
+      </div>
+      <div class="slider-group">
+        <div class="slider-header">
+          <label class="slider-label">Engineer Cost</label>
+          <span class="slider-value" id="costValue"></span>
+        </div>
+        <div class="slider-sub">Fully loaded annual cost per engineer</div>
+        <input type="range" id="costSlider" min="80000" max="250000" step="10000" value="150000">
+        <div class="slider-range"><span>$80K</span><span>$250K</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Density -->
+  <div class="panel">
+    <div class="slider-label" style="margin-bottom:14px">Code Complexity & Density</div>
+    <div class="density-buttons" id="densityButtons"></div>
+    <div class="density-tag" id="densityTag"></div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row" id="statsRow"></div>
+
+  <!-- Team & Timeline -->
+  <div class="panel" style="margin-bottom:24px;">
+    <div class="section-label" style="margin-bottom:20px;">Team &amp; Timeline Estimate</div>
+    <div style="display:flex;gap:40px;flex-wrap:wrap;align-items:flex-start;">
+      <div style="min-width:200px;">
+        <div style="font-size:10px;color:var(--gap-blue);letter-spacing:0.12em;text-transform:uppercase;font-weight:700;margin-bottom:6px;">Engineers Required</div>
+        <div style="font-size:56px;font-weight:900;color:var(--gap-dark);line-height:1;" id="ttEng">—</div>
+        <div style="font-size:11px;color:var(--gap-gray);margin-top:8px;" id="ttEngSub"></div>
+        <div style="margin-top:18px;">
+          <div style="font-size:10px;color:var(--gap-blue);letter-spacing:0.08em;text-transform:uppercase;font-weight:700;margin-bottom:8px;">Adjust Team Size</div>
+          <input type="range" id="engSlider" min="1" max="30" value="2" style="width:100%;accent-color:var(--gap-blue);height:6px;cursor:pointer;">
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--gap-light-gray);margin-top:4px;font-weight:700;">
+            <span>1 eng</span><span id="engSliderMax"></span>
+          </div>
+
+        </div>
+      </div>
+      <div style="min-width:130px;">
+        <div style="font-size:10px;color:var(--gap-blue);letter-spacing:0.12em;text-transform:uppercase;font-weight:700;margin-bottom:6px;">Duration</div>
+        <div style="display:flex;align-items:baseline;gap:6px;">
+          <span style="font-size:56px;font-weight:900;color:var(--gap-dark);line-height:1;" id="ttMonths">—</span>
+          <span style="font-size:16px;color:var(--gap-gray);font-weight:700;">months</span>
+        </div>
+        <div style="font-size:11px;color:var(--gap-gray);margin-top:8px;" id="ttMonthsSub"></div>
+      </div>
+      <div style="flex:1;min-width:220px;">
+        <div style="font-size:10px;color:var(--gap-blue);letter-spacing:0.12em;text-transform:uppercase;font-weight:700;margin-bottom:12px;">Project Timeline</div>
+        <div id="ttTimeline" style="display:flex;gap:5px;flex-wrap:wrap;"></div>
+        <div style="font-size:10px;color:var(--gap-light-gray);margin-top:10px;font-weight:700;" id="ttTimelineLabel"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Comparison -->
+  <div class="compare-grid">
+    <div class="card-diy">
+      <div class="card-badge badge-risk">HIGH RISK</div>
+      <div class="card-type" style="color:var(--gap-red)">DIY with GenAI</div>
+      <div class="card-amount" style="color:var(--gap-red)" id="diyCost"></div>
+      <div class="card-meta" id="diyMeta"></div>
+      <button class="breakdown-btn" id="breakdownBtn" onclick="toggleBreakdown()">Show breakdown ▾</button>
+    </div>
+    <div class="card-pro">
+      <div class="card-badge badge-managed">MANAGED RISK</div>
+      <div class="card-type" style="color:var(--gap-green)">VELO - GAP Velocity AI</div>
+      <div class="card-amount" style="color:var(--gap-green)" id="proCost"></div>
+      <div class="card-meta" id="proMeta"></div>
+      <div class="card-meta" id="proCplMeta" style="margin-top:4px;"></div>
+      <div class="savings-box">
+        <div class="savings-amount" id="savingsAmount"></div>
+        <div class="savings-detail" id="savingsDetail"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Breakdown -->
+  <div class="panel breakdown" id="breakdownPanel" style="display:none"></div>
+
+  <!-- Summary -->
+  <div class="summary" id="summaryPanel"></div>
+</div>
+
+<script>
+const STACKS = {
+  microsoft: { label:"Microsoft", icon:"◆", risk:1.2,  hpk:12, color:"#006489", desc:"VB6, Access, WinForms, WebForms" },
+  powerbuilder: { label:"PowerBuilder", icon:"▣", risk:1.35,  hpk:14, color:"#18C1E5", desc:"DataWindows, User Objects, Windows" },
+  clarion: { label:"Clarion", icon:"◇", risk:1.5, hpk:16, color:"#5497AE", desc:"Data Dictionary, Templates(ABC) , APP" },
+  
+};
+const DENSITY = [
+  { label:"Clean",     factor:0.7, tag:"Well-structured, documented, few integrations" },
+  { label:"Typical",   factor:1.0, tag:"Average legacy codebase — some docs, moderate coupling" },
+  { label:"Dense",     factor:1.3, tag:"Heavy business logic, undocumented, tightly coupled" },
+  { label:"Spaghetti", factor:1.7, tag:"Decades of patches, no docs, implicit dependencies everywhere" },
+];
+const RISKS = [
+  { id:"architectural_refactoring", label:"Architectural Refactoring",  pct:0.10, desc:"AI often translates code \"like-for-like.\" Manual engineers must break monolithic logic into microservices or serverless functions to be truly cloud-native." },
+  { id:"integration_edge_cases", label:"Integration & Edge Cases", pct:0.08, desc:"Legacy apps often rely on hard-coded file paths, specific DLLs, or obscure 3rd-party COM controls that AI cannot find modern equivalents for." },
+  { id:"security_identity", label:"Security & Identity", pct:0.05, desc:"Moving from \"Windows Authentication\" to modern OAuth2/OpenID Connect and implementing Zero Trust networking." },
+  { id:"data_migration", label:"Data Migration & State", pct:0.04, desc:"Shifting from local state/session management to distributed caches (like Redis) and migrating legacy SQL schemas to cloud-optimized databases." },
+  { id:"testing_validation", label:"Testing & Validation", pct:0.03, desc:"Human oversight to ensure \"functional equivalence\"—verifying that the AI didn't \"hallucinate\" a business rule or skip a edge-case calculation."}
+];
+
+const costDataVELO = {
+    "technologies": {
+      "microsoft": {
+        "tiers": [
+          { "from": 1,       "to": 100000,  "cost_per_loc": 0.55, "time": 1 },
+          { "from": 100001,  "to": 250000,  "cost_per_loc": 0.50, "time": 3 },
+          { "from": 250001,  "to": 500000,  "cost_per_loc": 0.45, "time": 5 },
+          { "from": 500001,  "to": 1000000, "cost_per_loc": 0.40, "time": 7 },
+          { "from": 1000001, "to": 2500000, "cost_per_loc": 0.35, "time": 9 },
+          { "from": 2500001, "to": 5000000, "cost_per_loc": 0.30, "time": 12 },
+          { "from": 5000001, "to": null,    "cost_per_loc": 0.18, "time": 12 }
+        ]
+      },
+      "powerbuilder": {
+        "tiers": [
+          { "from": 1,       "to": 100000,  "cost_per_loc": 0.70, "time": 1 },
+          { "from": 100001,  "to": 250000,  "cost_per_loc": 0.65, "time": 3 },
+          { "from": 250001,  "to": 500000,  "cost_per_loc": 0.60, "time": 5 },
+          { "from": 500001,  "to": 1000000, "cost_per_loc": 0.55, "time": 7 },
+          { "from": 1000001, "to": 2500000, "cost_per_loc": 0.50, "time": 9 },
+          { "from": 2500001, "to": 5000000, "cost_per_loc": 0.45, "time": 12 },
+          { "from": 5000001, "to": null,    "cost_per_loc": 0.25, "time": 12 }
+        ]
+      },
+      "clarion": {
+        "tiers": [
+          { "from": 1,       "to": 100000,  "cost_per_loc": 0.85, "time": 1 },
+          { "from": 100001,  "to": 250000,  "cost_per_loc": 0.80, "time": 3 },
+          { "from": 250001,  "to": 500000,  "cost_per_loc": 0.75, "time": 5 },
+          { "from": 500001,  "to": 1000000, "cost_per_loc": 0.70, "time": 7 },
+          { "from": 1000001, "to": 2500000, "cost_per_loc": 0.65, "time": 9 },
+          { "from": 2500001, "to": 5000000, "cost_per_loc": 0.60, "time": 12 },
+          { "from": 5000001, "to": null,    "cost_per_loc": 0.35, "time": 12 }
+        ]
+      }
+    }
+};
+
+let state = { stack:"microsoft", kloc:200, cost:150000, density:1, breakdownOpen:false, expandedRisk:null, customEng: null };
+
+function fmt$(n) { return n>=1e6 ? `$${(n/1e6).toFixed(1)}M` : n>=1e3 ? `$${(n/1e3).toFixed(0)}K` : `$${n.toFixed(0)}`; }
+function fmtK(v) { return v>=1000 ? `${(v/1000).toFixed(v>=10000?0:1)}M` : `${v}K`; }
+
+function calc() {
+  const s = STACKS[state.stack], d = DENSITY[state.density];
+  const ehpk = s.hpk * d.factor;
+  const hours = Math.round(state.kloc * ehpk);
+  const recommendedEng = Math.max(2, Math.ceil(hours / 1800));
+  const eng = state.customEng !== null ? state.customEng : recommendedEng;
+  const baseCost = eng * state.cost;
+  const aiCost = Math.round(state.kloc * 15);
+  const risks = RISKS.map(r => ({ ...r, cost: Math.round(baseCost * r.pct * s.risk) }));
+  const riskTotal = risks.reduce((s,r) => s + r.cost, 0);
+  const diy = baseCost + aiCost + riskTotal;
+  const months = Math.max(3, Math.ceil((hours / eng) / 140));
+  const velo = calculateVELOCost(state.stack, state.kloc * 1000);
+  const pro = velo.totalCost;
+  const proMonths = velo.months; //Math.max(velo.months, Math.ceil(months * 0.5));
+  const lines = state.kloc * 1000;
+  return { ehpk, hours, eng, recommendedEng, baseCost, aiCost, risks, riskTotal, diy, months, pro, proMonths, proCpl: velo.costPerLoc, lines, cpl:(diy/lines).toFixed(2) };
+}
+
+function calculateVELOCost(technology, linesOfCode) {
+  const technologies = costDataVELO.technologies;
+
+  if (!technologies[technology]) {
+    throw new Error(
+      `Unknown technology: "${technology}". Available: ${Object.keys(technologies).join(", ")}`
+    );
+  }
+
+  if (!Number.isInteger(linesOfCode) || linesOfCode < 1) {
+    throw new Error(`Lines of code must be a positive integer. Got: ${linesOfCode}`);
+  }
+
+  const tiers = technologies[technology].tiers;
+
+  const matchedTier = tiers.find(
+    ({ from, to }) => linesOfCode >= from && (to === null || linesOfCode <= to)
+  );
+
+  return {
+    technology,
+    linesOfCode,
+    costPerLoc: matchedTier.cost_per_loc,
+    months: matchedTier.time,
+    totalCost: parseFloat((linesOfCode * matchedTier.cost_per_loc).toFixed(2)),
+  };
+}
+
+function buildStacks() {
+  const c = document.getElementById('stackButtons');
+  c.innerHTML = '';
+  Object.entries(STACKS).forEach(([k,s]) => {
+    const btn = document.createElement('button');
+    btn.className = 'stack-btn' + (state.stack===k?' active':'');
+    btn.innerHTML = `<span class="icon">${s.icon}</span><span class="label">${s.label}</span><span class="meta">~${s.hpk} hrs/KLOC · ${s.risk}x risk</span>`;
+    btn.onclick = () => { state.stack = k; render(); };
+    c.appendChild(btn);
+  });
+  document.getElementById('stackDesc').textContent = STACKS[state.stack].desc;
+}
+
+function buildDensity() {
+  const c = document.getElementById('densityButtons');
+  c.innerHTML = '';
+  DENSITY.forEach((d,i) => {
+    const btn = document.createElement('button');
+    btn.className = 'density-btn' + (state.density===i?' active':'');
+    btn.innerHTML = `<div class="dlabel">${d.label}</div><div class="dfactor">${d.factor}x effort</div>`;
+    btn.onclick = () => { state.density = i; render(); };
+    c.appendChild(btn);
+  });
+  document.getElementById('densityTag').textContent = DENSITY[state.density].tag;
+}
+
+function toggleBreakdown() { state.breakdownOpen = !state.breakdownOpen; render(); }
+function toggleRisk(id) { state.expandedRisk = state.expandedRisk === id ? null : id; render(); }
+
+function render() {
+  const r = calc(), s = STACKS[state.stack], d = DENSITY[state.density];
+  const savings = r.diy - r.pro, savPct = ((savings/r.diy)*100).toFixed(0);
+
+  buildStacks();
+  buildDensity();
+
+  document.getElementById('klocValue').textContent = `${fmtK(state.kloc)} lines`;
+  document.getElementById('costValue').textContent = fmt$(state.cost);
+
+  document.getElementById('statsRow').innerHTML = `
+    <div class="stat-card"><div class="st-label">Total Lines</div><div class="st-value">${r.lines.toLocaleString()}</div><div class="st-sub">${fmtK(state.kloc)} KLOC</div></div>
+    <div class="stat-card"><div class="st-label">Eng. Hours</div><div class="st-value">${r.hours.toLocaleString()}</div><div class="st-sub">${r.ehpk.toFixed(0)} hrs/KLOC</div></div>
+    <div class="stat-card"><div class="st-label">Team Size</div><div class="st-value">${r.eng}</div><div class="st-sub">${r.months} months</div></div>
+    <div class="stat-card"><div class="st-label">Cost / Line</div><div class="st-value accent">$${r.cpl}</div><div class="st-sub">DIY all-in</div></div>`;
+
+  const sliderMax = 30;
+  const engSlider = document.getElementById('engSlider');
+  engSlider.max = sliderMax;
+  if (state.customEng === null) engSlider.value = r.recommendedEng;
+  document.getElementById('engSliderMax').textContent = `${sliderMax} eng`;
+  document.getElementById('ttEng').textContent = r.eng;
+  document.getElementById('ttEngSub').textContent = `${fmt$(state.cost)}/yr · ${r.hours.toLocaleString()} total hrs`;
+  document.getElementById('ttMonths').textContent = r.months;
+  document.getElementById('ttMonthsSub').textContent = `≈ ${(r.months / 12).toFixed(1)} yrs · ${r.ehpk.toFixed(0)} hrs/KLOC`;
+  const maxBlocks = Math.min(36, Math.max(13, r.months));
+  let tlHtml = '';
+  for (let m = 1; m <= maxBlocks; m++) {
+    const active = m <= r.months;
+    tlHtml += `<div title="Month ${m}" style="width:28px;height:28px;border-radius:5px;background:${active ? 'var(--gap-red)' : 'var(--gap-lighter-gray)'};display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:${active ? 'var(--gap-white)' : 'var(--gap-light-gray)'}">${m}</div>`;
+  }
+  if (r.months > 36) {
+    tlHtml += `<div style="display:flex;align-items:center;font-size:11px;color:var(--gap-red);font-weight:700;margin-left:6px;">+${r.months - 36} more</div>`;
+  }
+  document.getElementById('ttTimeline').innerHTML = tlHtml;
+  document.getElementById('ttTimelineLabel').textContent = r.months > 36
+    ? `${r.months} months total (showing first 36)`
+    : `${r.months} of ${maxBlocks} months`;
+
+  document.getElementById('diyCost').textContent = fmt$(r.diy);
+  document.getElementById('diyMeta').textContent = `${r.months} months · ${r.eng} engineers · ${fmtK(state.kloc)} lines`;
+  document.getElementById('proCost').textContent = fmt$(r.pro);
+  document.getElementById('proMeta').textContent = `${r.proMonths} months · proven methodology`;
+  document.getElementById('proCplMeta').textContent = `$${r.proCpl.toFixed(2)} per line`;
+  document.getElementById('savingsAmount').textContent = `Save ${fmt$(savings)}`;
+  document.getElementById('savingsDetail').textContent = `${savPct}% less · ${r.months - r.proMonths} months faster`;
+  document.getElementById('breakdownBtn').textContent = (state.breakdownOpen ? 'Hide' : 'Show') + ' breakdown ▾';
+
+  const bp = document.getElementById('breakdownPanel');
+  bp.style.display = state.breakdownOpen ? 'block' : 'none';
+  if (state.breakdownOpen) {
+    let html = `<div class="section-label" style="margin-bottom:8px">DIY Cost Breakdown — ${fmtK(state.kloc)} lines of ${s.label}</div>`;
+    html += `<div class="breakdown-row"><div><span class="row-label">Base engineering cost</span><div class="row-sub">${r.eng} engineers × ${fmt$(state.cost)}/yr</div></div><span class="row-value">${fmt$(r.baseCost)}</span></div>`;
+    html += `<div class="breakdown-row"><div><span class="row-label">GenAI tooling & API costs</span><div class="row-sub">~$15 per KLOC in token costs, tooling licenses</div></div><span class="row-value">${fmt$(r.aiCost)}</span></div>`;
+    html += `<div style="margin-top:16px;margin-bottom:8px"><div style="font-size:11px;color:var(--gap-red);letter-spacing:0.15em;text-transform:uppercase;font-weight:700">Last Mile Costs — ${fmt$(r.riskTotal)}</div><div style="font-size:11px;color:var(--gap-gray);margin-top:4px">Adjusted for ${s.label} (${s.risk}x risk) + ${d.label} density (${d.factor}x effort). Click any row.</div></div>`;
+    r.risks.forEach(ri => {
+      const barW = Math.min(120, Math.max(8, (ri.cost/500000)*120));
+      const barCol = ri.cost>200000 ? '#E54360' : ri.cost>100000 ? '#FEBD12' : '#43B686';
+      const isOpen = state.expandedRisk === ri.id;
+      html += `<div class="risk-row" onclick="toggleRisk('${ri.id}')">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="display:flex;align-items:center;gap:10px"><span class="risk-arrow${isOpen?' open':''}">▸</span><span class="risk-label">${ri.label}</span></div>
+          <div style="display:flex;align-items:center;gap:12px"><div class="risk-bar" style="width:${barW}px;background:${barCol}"></div><span class="risk-cost">${fmt$(ri.cost)}</span></div>
+        </div>
+        ${isOpen ? `<div class="risk-detail">${ri.desc}<div class="risk-pct">Estimated at ${(ri.pct*100).toFixed(0)}% of base engineering cost</div></div>` : ''}
+      </div>`;
+    });
+    bp.innerHTML = html;
+  }
+
+  document.getElementById('summaryPanel').innerHTML = `
+    <p>With <strong>${r.lines.toLocaleString()} lines of ${s.label}</strong> at <strong>${d.label.toLowerCase()}</strong> density, your team would need <strong>${r.eng} engineers</strong> working <strong>${r.months} months</strong>. That's <strong class="red">$${r.cpl} per line</strong> — and <strong class="red">${fmt$(r.riskTotal)}</strong> of that is hidden risk from silent bugs, rework, and lost business logic that GenAI alone can't catch.</p>
+    <div class="footnote">These are <em>your</em> numbers. Adjust the sliders and see what changes.</div>`;
+}
+
+document.getElementById('klocSlider').addEventListener('input', e => { state.kloc = +e.target.value; state.customEng = null; render(); });
+document.getElementById('costSlider').addEventListener('input', e => { state.cost = +e.target.value; render(); });
+document.getElementById('engSlider').addEventListener('input', e => { state.customEng = +e.target.value; render(); });
+render();
+</script>
+</body>
+</html>
