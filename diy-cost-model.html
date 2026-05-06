@@ -55,9 +55,18 @@
   .section-label { font-size: 11px; color: var(--gap-blue); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 12px; font-weight: 700; }
 
   /* Stack selector */
-  .stack-buttons { display: flex; gap: 10px; margin-bottom: 8px; }
+  .stack-nav { display: flex; align-items: stretch; gap: 10px; margin-bottom: 8px; }
+  .stack-nav-btn {
+    flex-shrink: 0; width: 36px; background: var(--gap-white); border: 2px solid var(--gap-light-gray);
+    border-radius: 8px; cursor: pointer; font-size: 20px; color: var(--gap-blue);
+    display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+  }
+  .stack-nav-btn:hover:not(:disabled) { border-color: var(--gap-blue); background: var(--gap-blue); color: var(--gap-white); }
+  .stack-nav-btn:disabled { color: var(--gap-light-gray); cursor: default; border-color: #F0F0F0; }
+  .stack-buttons { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; flex: 1; }
+  .stack-nav-indicator { font-size: 11px; color: var(--gap-gray); font-weight: 700; margin-bottom: 8px; }
   .stack-btn {
-    flex: 1; padding: 16px; background: var(--gap-white); border: 2px solid var(--gap-light-gray);
+    min-width: 0; padding: 16px; background: var(--gap-white); border: 2px solid var(--gap-light-gray);
     border-radius: 8px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 6px;
     transition: all 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.04);
   }
@@ -183,7 +192,7 @@
   <!-- Stack Selector -->
   <div>
     <div class="section-label">Primary Legacy Stack</div>
-    <div class="stack-buttons" id="stackButtons"></div>
+    <div id="stackSelector"></div>
     <div class="stack-desc" id="stackDesc"></div>
   </div>
 
@@ -213,7 +222,7 @@
 
   <!-- Density -->
   <div class="panel">
-    <div class="slider-label" style="margin-bottom:14px">Code Complexity & Density</div>
+    <div class="slider-label" style="margin-bottom:14px">Code Complexity</div>
     <div class="density-buttons" id="densityButtons"></div>
     <div class="density-tag" id="densityTag"></div>
   </div>
@@ -266,7 +275,11 @@
     <div class="card-pro">
       <div class="card-badge badge-managed">MANAGED RISK</div>
       <div class="card-type" style="color:var(--gap-green)">VELO - GAP Velocity AI</div>
-      <div class="card-amount" style="color:var(--gap-green)" id="proCost"></div>
+      <div class="card-type" style="color:var(--gap-yellow)">VELO Pricing</div>
+      <div class="card-amount" style="color:var(--gap-yellow)" id="proCost"></div>
+      <br>
+      <div class="card-type" style="color:var(--gap-green)">VELO Pricing + Code Complexity</div>
+      <div class="card-amount" style="color:var(--gap-green)" id="proAndRisk"></div>
       <div class="card-meta" id="proMeta"></div>
       <div class="card-meta" id="proCplMeta" style="margin-top:4px;"></div>
       <div class="savings-box">
@@ -285,15 +298,22 @@
 
 <script>
 const STACKS = {
-  microsoft: { label:"Microsoft", icon:"◆", risk:1.2,  hpk:12, color:"#006489", desc:"VB6, Access, WinForms, WebForms" },
-  powerbuilder: { label:"PowerBuilder", icon:"▣", risk:1.35,  hpk:14, color:"#18C1E5", desc:"DataWindows, User Objects, Windows" },
-  clarion: { label:"Clarion", icon:"◇", risk:1.5, hpk:16, color:"#5497AE", desc:"Data Dictionary, Templates(ABC) , APP" },
-  
+  vb6: { label:"VB6", icon:"◆", risk:1.2,  hpk:12, color:"#006489", desc:"A legacy, event-driven language and IDE focused on Rapid Application Development (RAD) for 32-bit Windows applications using the COM model." },
+  vbnet: { label:"VB.NET", icon:"▣", risk:1.2,  hpk:12, color:"#18C1E5", desc:"The modern, object-oriented successor to VB6 that runs on the .NET managed framework, offering full access to system libraries and cross-platform capabilities." },
+  access: { label:"MS Access", icon:"◇", risk:1.2, hpk:12, color:"#5497AE", desc:"An all-in-one desktop database tool that combines a relational engine with a graphical interface for building simple data-entry forms and complex reports." },
+  powerbuilder: { label:"PowerBuilder", icon:"▣", risk:1.35,  hpk:14, color:"#18C1E5", desc:"An enterprise-level RAD tool famous for its \"DataWindow\" technology, which enables developers to handle complex database interactions with minimal manual coding." },
+  webforms: { label:"WebForms", icon:"◆", risk:1.2,  hpk:12, color:"#006489", desc:"An ASP.NET framework designed to make web development feel like desktop development by using server-side controls and a \"ViewState\" to maintain page data across clicks." },
+  winforms: { label:"WinForms", icon:"▣", risk:1.2,  hpk:12, color:"#18C1E5", desc:"A .NET class library used to build Windows desktop applications with a drag-and-drop designer and a pixel-based rendering engine." },
+  clarion: { label:"Clarion", icon:"◇", risk:1.5, hpk:16, color:"#5497AE", desc:"A 4GL (fourth-generation language) development environment that uses a unique template-driven system to automatically generate code for data-heavy business applications." },
+  silverlight: { label:"Silverlight", icon:"◆", risk:1.2,  hpk:12, color:"#006489", desc:"A now-deprecated browser plugin that used XAML and a subset of .NET to deliver rich, high-definition animations and media-heavy \"Rich Internet Applications.\""},
+  aspclassic: { label:"ASP Classic", icon:"▣", risk:1.2,  hpk:12, color:"#18C1E5", desc:"Microsoft's first server-side scripting engine that allows developers to mix HTML and VBScript/JScript to create dynamic, albeit procedurally coded, web pages." },
+  informix: { label:"Informix", icon:"◇", risk:1.5, hpk:16, color:"#5497AE", desc:"A high-performance, scalable relational database management system (RDBMS) optimized for high-transaction environments and deeply embedded data-management solutions." },
+  delphi: { label:"Delphi", icon:"◆", risk:1.5,  hpk:16, color:"#006489", desc:"A high-performance, object-oriented language based on Pascal known for its lightning-fast native compilers and its ability to build cross-platform desktop and mobile apps from a single codebase." },
 };
 const DENSITY = [
-  { label:"Clean",     factor:0.7, tag:"Well-structured, documented, few integrations" },
-  { label:"Typical",   factor:1.0, tag:"Average legacy codebase — some docs, moderate coupling" },
-  { label:"Dense",     factor:1.3, tag:"Heavy business logic, undocumented, tightly coupled" },
+  { label:"Clean",     factor:1.0, tag:"Well-structured, documented, few integrations" },
+  { label:"Typical",   factor:1.3, tag:"Average legacy codebase — some docs, moderate coupling" },
+  { label:"Dense",     factor:1.5, tag:"Heavy business logic, undocumented, tightly coupled" },
   { label:"Spaghetti", factor:1.7, tag:"Decades of patches, no docs, implicit dependencies everywhere" },
 ];
 const RISKS = [
@@ -306,7 +326,29 @@ const RISKS = [
 
 const costDataVELO = {
     "technologies": {
-      "microsoft": {
+      "vb6": {
+        "tiers": [
+          { "from": 1,       "to": 100000,  "cost_per_loc": 0.55, "time": 1 },
+          { "from": 100001,  "to": 250000,  "cost_per_loc": 0.50, "time": 3 },
+          { "from": 250001,  "to": 500000,  "cost_per_loc": 0.45, "time": 5 },
+          { "from": 500001,  "to": 1000000, "cost_per_loc": 0.40, "time": 7 },
+          { "from": 1000001, "to": 2500000, "cost_per_loc": 0.35, "time": 9 },
+          { "from": 2500001, "to": 5000000, "cost_per_loc": 0.30, "time": 12 },
+          { "from": 5000001, "to": null,    "cost_per_loc": 0.18, "time": 12 }
+        ]
+      },
+      "vbnet": {
+        "tiers": [
+          { "from": 1,       "to": 100000,  "cost_per_loc": 0.55, "time": 1 },
+          { "from": 100001,  "to": 250000,  "cost_per_loc": 0.50, "time": 3 },
+          { "from": 250001,  "to": 500000,  "cost_per_loc": 0.45, "time": 5 },
+          { "from": 500001,  "to": 1000000, "cost_per_loc": 0.40, "time": 7 },
+          { "from": 1000001, "to": 2500000, "cost_per_loc": 0.35, "time": 9 },
+          { "from": 2500001, "to": 5000000, "cost_per_loc": 0.30, "time": 12 },
+          { "from": 5000001, "to": null,    "cost_per_loc": 0.18, "time": 12 }
+        ]
+      },
+      "access": {
         "tiers": [
           { "from": 1,       "to": 100000,  "cost_per_loc": 0.55, "time": 1 },
           { "from": 100001,  "to": 250000,  "cost_per_loc": 0.50, "time": 3 },
@@ -328,7 +370,73 @@ const costDataVELO = {
           { "from": 5000001, "to": null,    "cost_per_loc": 0.25, "time": 12 }
         ]
       },
+      "webforms": {
+        "tiers": [
+          { "from": 1,       "to": 100000,  "cost_per_loc": 0.55, "time": 1 },
+          { "from": 100001,  "to": 250000,  "cost_per_loc": 0.50, "time": 3 },
+          { "from": 250001,  "to": 500000,  "cost_per_loc": 0.45, "time": 5 },
+          { "from": 500001,  "to": 1000000, "cost_per_loc": 0.40, "time": 7 },
+          { "from": 1000001, "to": 2500000, "cost_per_loc": 0.35, "time": 9 },
+          { "from": 2500001, "to": 5000000, "cost_per_loc": 0.30, "time": 12 },
+          { "from": 5000001, "to": null,    "cost_per_loc": 0.18, "time": 12 }
+        ]
+      },
+      "winforms": {
+        "tiers": [
+          { "from": 1,       "to": 100000,  "cost_per_loc": 0.55, "time": 1 },
+          { "from": 100001,  "to": 250000,  "cost_per_loc": 0.50, "time": 3 },
+          { "from": 250001,  "to": 500000,  "cost_per_loc": 0.45, "time": 5 },
+          { "from": 500001,  "to": 1000000, "cost_per_loc": 0.40, "time": 7 },
+          { "from": 1000001, "to": 2500000, "cost_per_loc": 0.35, "time": 9 },
+          { "from": 2500001, "to": 5000000, "cost_per_loc": 0.30, "time": 12 },
+          { "from": 5000001, "to": null,    "cost_per_loc": 0.18, "time": 12 }
+        ]
+      },
       "clarion": {
+        "tiers": [
+          { "from": 1,       "to": 100000,  "cost_per_loc": 0.85, "time": 1 },
+          { "from": 100001,  "to": 250000,  "cost_per_loc": 0.80, "time": 3 },
+          { "from": 250001,  "to": 500000,  "cost_per_loc": 0.75, "time": 5 },
+          { "from": 500001,  "to": 1000000, "cost_per_loc": 0.70, "time": 7 },
+          { "from": 1000001, "to": 2500000, "cost_per_loc": 0.65, "time": 9 },
+          { "from": 2500001, "to": 5000000, "cost_per_loc": 0.60, "time": 12 },
+          { "from": 5000001, "to": null,    "cost_per_loc": 0.35, "time": 12 }
+        ]
+      },
+      "silverlight": {
+        "tiers": [
+          { "from": 1,       "to": 100000,  "cost_per_loc": 0.55, "time": 1 },
+          { "from": 100001,  "to": 250000,  "cost_per_loc": 0.50, "time": 3 },
+          { "from": 250001,  "to": 500000,  "cost_per_loc": 0.45, "time": 5 },
+          { "from": 500001,  "to": 1000000, "cost_per_loc": 0.40, "time": 7 },
+          { "from": 1000001, "to": 2500000, "cost_per_loc": 0.35, "time": 9 },
+          { "from": 2500001, "to": 5000000, "cost_per_loc": 0.30, "time": 12 },
+          { "from": 5000001, "to": null,    "cost_per_loc": 0.18, "time": 12 }
+        ]
+      },
+      "aspclassic": {
+        "tiers": [
+          { "from": 1,       "to": 100000,  "cost_per_loc": 0.55, "time": 1 },
+          { "from": 100001,  "to": 250000,  "cost_per_loc": 0.50, "time": 3 },
+          { "from": 250001,  "to": 500000,  "cost_per_loc": 0.45, "time": 5 },
+          { "from": 500001,  "to": 1000000, "cost_per_loc": 0.40, "time": 7 },
+          { "from": 1000001, "to": 2500000, "cost_per_loc": 0.35, "time": 9 },
+          { "from": 2500001, "to": 5000000, "cost_per_loc": 0.30, "time": 12 },
+          { "from": 5000001, "to": null,    "cost_per_loc": 0.18, "time": 12 }
+        ]
+      },
+      "informix": {
+        "tiers": [
+          { "from": 1,       "to": 100000,  "cost_per_loc": 0.85, "time": 1 },
+          { "from": 100001,  "to": 250000,  "cost_per_loc": 0.80, "time": 3 },
+          { "from": 250001,  "to": 500000,  "cost_per_loc": 0.75, "time": 5 },
+          { "from": 500001,  "to": 1000000, "cost_per_loc": 0.70, "time": 7 },
+          { "from": 1000001, "to": 2500000, "cost_per_loc": 0.65, "time": 9 },
+          { "from": 2500001, "to": 5000000, "cost_per_loc": 0.60, "time": 12 },
+          { "from": 5000001, "to": null,    "cost_per_loc": 0.35, "time": 12 }
+        ]
+      },
+      "delphi": {
         "tiers": [
           { "from": 1,       "to": 100000,  "cost_per_loc": 0.85, "time": 1 },
           { "from": 100001,  "to": 250000,  "cost_per_loc": 0.80, "time": 3 },
@@ -342,7 +450,7 @@ const costDataVELO = {
     }
 };
 
-let state = { stack:"microsoft", kloc:200, cost:150000, density:1, breakdownOpen:false, expandedRisk:null, customEng: null };
+let state = { stack:"vb6", kloc:200, cost:150000, density:1, breakdownOpen:false, expandedRisk:null, customEng: null, stackPage: 0 };
 
 function fmt$(n) { return n>=1e6 ? `$${(n/1e6).toFixed(1)}M` : n>=1e3 ? `$${(n/1e3).toFixed(0)}K` : `$${n.toFixed(0)}`; }
 function fmtK(v) { return v>=1000 ? `${(v/1000).toFixed(v>=10000?0:1)}M` : `${v}K`; }
@@ -361,9 +469,10 @@ function calc() {
   const months = Math.max(3, Math.ceil((hours / eng) / 140));
   const velo = calculateVELOCost(state.stack, state.kloc * 1000);
   const pro = velo.totalCost;
-  const proMonths = velo.months; //Math.max(velo.months, Math.ceil(months * 0.5));
+  const proAndRisk = pro * DENSITY[state.density].factor;
+  const proMonths = velo.months;
   const lines = state.kloc * 1000;
-  return { ehpk, hours, eng, recommendedEng, baseCost, aiCost, risks, riskTotal, diy, months, pro, proMonths, proCpl: velo.costPerLoc, lines, cpl:(diy/lines).toFixed(2) };
+  return { ehpk, hours, eng, recommendedEng, baseCost, aiCost, risks, riskTotal, diy, months, pro, proAndRisk, proMonths, proCpl: velo.costPerLoc, lines, cpl:(diy/lines).toFixed(2) };
 }
 
 function calculateVELOCost(technology, linesOfCode) {
@@ -395,15 +504,53 @@ function calculateVELOCost(technology, linesOfCode) {
 }
 
 function buildStacks() {
-  const c = document.getElementById('stackButtons');
-  c.innerHTML = '';
-  Object.entries(STACKS).forEach(([k,s]) => {
+  const keys = Object.keys(STACKS);
+  const PAGE_SIZE = 4;
+  const totalPages = Math.ceil(keys.length / PAGE_SIZE);
+  const pageKeys = keys.slice(state.stackPage * PAGE_SIZE, (state.stackPage + 1) * PAGE_SIZE);
+
+  const root = document.getElementById('stackSelector');
+  root.innerHTML = '';
+
+  // Nav row
+  const nav = document.createElement('div');
+  nav.className = 'stack-nav';
+
+  const prevBtn = document.createElement('button');
+  prevBtn.className = 'stack-nav-btn';
+  prevBtn.innerHTML = '&#8249;';
+  prevBtn.title = 'Previous';
+  prevBtn.disabled = state.stackPage === 0;
+  prevBtn.onclick = () => { state.stackPage--; render(); };
+  nav.appendChild(prevBtn);
+
+  const grid = document.createElement('div');
+  grid.className = 'stack-buttons';
+  pageKeys.forEach(k => {
+    const s = STACKS[k];
     const btn = document.createElement('button');
-    btn.className = 'stack-btn' + (state.stack===k?' active':'');
+    btn.className = 'stack-btn' + (state.stack === k ? ' active' : '');
     btn.innerHTML = `<span class="icon">${s.icon}</span><span class="label">${s.label}</span><span class="meta">~${s.hpk} hrs/KLOC · ${s.risk}x risk</span>`;
     btn.onclick = () => { state.stack = k; render(); };
-    c.appendChild(btn);
+    grid.appendChild(btn);
   });
+  nav.appendChild(grid);
+
+  const nextBtn = document.createElement('button');
+  nextBtn.className = 'stack-nav-btn';
+  nextBtn.innerHTML = '&#8250;';
+  nextBtn.title = 'Next';
+  nextBtn.disabled = state.stackPage >= totalPages - 1;
+  nextBtn.onclick = () => { state.stackPage++; render(); };
+  nav.appendChild(nextBtn);
+
+  root.appendChild(nav);
+
+  const indicator = document.createElement('div');
+  indicator.className = 'stack-nav-indicator';
+  indicator.textContent = `${state.stackPage + 1} / ${totalPages}`;
+  root.appendChild(indicator);
+
   document.getElementById('stackDesc').textContent = STACKS[state.stack].desc;
 }
 
@@ -465,6 +612,7 @@ function render() {
   document.getElementById('diyCost').textContent = fmt$(r.diy);
   document.getElementById('diyMeta').textContent = `${r.months} months · ${r.eng} engineers · ${fmtK(state.kloc)} lines`;
   document.getElementById('proCost').textContent = fmt$(r.pro);
+  document.getElementById('proAndRisk').textContent = fmt$(r.proAndRisk);
   document.getElementById('proMeta').textContent = `${r.proMonths} months · proven methodology`;
   document.getElementById('proCplMeta').textContent = `$${r.proCpl.toFixed(2)} per line`;
   document.getElementById('savingsAmount').textContent = `Save ${fmt$(savings)}`;
