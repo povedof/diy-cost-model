@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DIY Cost Reality Check — GAP Velocity AI</title>
 <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -160,20 +161,95 @@
 
   /* Bottom summary */
   .summary {
-    padding: 28px 32px; border-radius: 10px; background: var(--gap-blue); text-align: center;
-    position: relative; overflow: hidden;
+    border-radius: 10px; overflow: hidden;
+    position: relative;
   }
-  .summary::after { content:''; position:absolute; bottom:0; left:0; right:0; height:4px; background: var(--gap-cyan); }
-  .summary p { font-size: 14px; color: var(--gap-blue-alt2); line-height: 1.7; max-width: 620px; margin: 0 auto; }
+  .summary-grid { display: grid; grid-template-columns: 1fr 1fr; }
+  .summary-diy {
+    padding: 28px 28px 32px; background: var(--gap-dark); position: relative;
+    border-top: 4px solid var(--gap-red);
+  }
+  .summary-velo {
+    padding: 28px 28px 32px; background: var(--gap-blue); position: relative;
+    border-top: 4px solid var(--gap-cyan);
+  }
+  .summary-velo::after { content:''; position:absolute; bottom:0; left:0; right:0; height:4px; background: var(--gap-cyan); }
+  .summary-tag { font-size: 9px; letter-spacing: 0.18em; font-weight: 700; text-transform: uppercase; margin-bottom: 10px; }
+  .summary-diy .summary-tag { color: var(--gap-red); }
+  .summary-velo .summary-tag { color: var(--gap-cyan); }
+  .summary p { font-size: 13px; line-height: 1.7; margin: 0; }
+  .summary-diy p { color: #c9c4c3; }
+  .summary-velo p { color: var(--gap-blue-alt2); }
   .summary strong { color: var(--gap-white); }
   .summary .red { color: var(--gap-yellow); }
-  .summary .footnote { margin-top: 16px; font-size: 11px; color: var(--gap-blue-alt1); }
+  .summary-diy .red { color: #ff7a92; }
+  .summary .green { color: #7cdbb5; }
+  .summary .footnote { margin-top: 16px; font-size: 11px; }
+  .summary-diy .footnote { color: #7a7370; }
+  .summary-velo .footnote { color: var(--gap-blue-alt1); }
+  @media (max-width: 700px) { .summary-grid { grid-template-columns: 1fr; } }
 
   @media (max-width: 700px) {
     .inputs-grid, .compare-grid { grid-template-columns: 1fr; }
     .stats-row { flex-wrap: wrap; }
     .stat-card { min-width: 45%; }
   }
+
+  /* Report button */
+  .btn-report {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 12px 28px; background: transparent;
+    border: 2px solid var(--gap-blue); color: var(--gap-blue);
+    border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 700;
+    font-family: 'Lato', sans-serif; letter-spacing: 0.06em;
+    transition: all 0.2s;
+  }
+  .btn-report:hover { background: var(--gap-blue); color: var(--gap-white); }
+  .btn-report:active { transform: scale(0.97); }
+  .btn-report-wrap { display: flex; justify-content: center; margin-bottom: 20px; }
+
+  /* Report dialog */
+  .report-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1000; animation: overlayIn 0.2s ease;
+  }
+  @keyframes overlayIn { from { opacity:0; } to { opacity:1; } }
+  .report-dialog {
+    background: var(--gap-white); border-radius: 12px; width: 420px; max-width: 92vw;
+    overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.22);
+    animation: dialogIn 0.22s ease;
+  }
+  @keyframes dialogIn { from { opacity:0; transform:scale(0.95) translateY(8px); } to { opacity:1; transform:none; } }
+  .report-dialog-head {
+    background: var(--gap-blue); padding: 20px 24px 18px;
+    position: relative;
+  }
+  .report-dialog-head::after { content:''; position:absolute; bottom:0; left:0; right:0; height:3px; background:var(--gap-cyan); }
+  .report-dialog-head .rdh-logo { font-size: 9px; color: var(--gap-blue-alt2); letter-spacing: 0.2em; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; }
+  .report-dialog-head h3 { font-size: 17px; font-weight: 900; color: var(--gap-white); margin: 0; }
+  .report-dialog-body { padding: 24px; }
+  .report-field label { display: block; font-size: 10px; font-weight: 700; color: var(--gap-blue); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 6px; }
+  .report-field input {
+    width: 100%; padding: 10px 14px; border: 2px solid var(--gap-light-gray);
+    border-radius: 7px; font-size: 14px; font-family: 'Lato', sans-serif;
+    color: var(--gap-dark); outline: none; transition: border-color 0.2s;
+  }
+  .report-field input:focus { border-color: var(--gap-blue); }
+  .report-note { font-size: 11px; color: var(--gap-gray); margin-top: 8px; line-height: 1.5; }
+  .report-actions { display: flex; gap: 10px; margin-top: 20px; }
+  .report-actions .btn-cancel {
+    flex: 1; padding: 10px; background: var(--gap-bg); border: 2px solid var(--gap-light-gray);
+    border-radius: 7px; cursor: pointer; font-size: 13px; font-weight: 700;
+    font-family: 'Lato', sans-serif; color: var(--gap-gray); transition: all 0.2s;
+  }
+  .report-actions .btn-cancel:hover { border-color: var(--gap-gray); color: var(--gap-dark); }
+  .report-actions .btn-download {
+    flex: 2; padding: 10px; background: var(--gap-blue); border: 2px solid var(--gap-blue);
+    border-radius: 7px; cursor: pointer; font-size: 13px; font-weight: 700;
+    font-family: 'Lato', sans-serif; color: var(--gap-white); transition: all 0.2s;
+  }
+  .report-actions .btn-download:hover { background: #004f6e; border-color: #004f6e; }
 </style>
 </head>
 <body>
@@ -275,14 +351,14 @@
     <div class="card-pro">
       <div class="card-badge badge-managed">MANAGED RISK</div>
       <div class="card-type" style="color:var(--gap-green)">VELO - GAP Velocity AI</div>
-      <div class="card-type" style="color:var(--gap-yellow)">VELO Pricing</div>
-      <div class="card-amount" style="color:var(--gap-yellow)" id="proCost"></div>
+      <div class="card-type" style="color:var(--gap-gray)">VELO Pricing</div>
+      <div class="card-amount" style="color:var(--gap-gray)" id="proCost"></div>
       <br>
       <div class="card-type" style="color:var(--gap-green)">VELO Pricing + Code Complexity</div>
       <div class="card-amount" style="color:var(--gap-green)" id="proAndRisk"></div>
       <div class="card-meta" id="proMeta"></div>
       <div class="card-meta" id="proCplMeta" style="margin-top:4px;"></div>
-      <div class="savings-box">
+      <div class="savings-box" id="savingsBox">
         <div class="savings-amount" id="savingsAmount"></div>
         <div class="savings-detail" id="savingsDetail"></div>
       </div>
@@ -294,6 +370,32 @@
 
   <!-- Summary -->
   <div class="summary" id="summaryPanel"></div>
+
+  <!-- Download button -->
+  <div class="btn-report-wrap" style="margin-top: 20px; margin-bottom: 0;">
+    <button class="btn-report" onclick="openReportDialog()">&#8595; Download Report</button>
+  </div>
+</div>
+
+<!-- Report dialog -->
+<div class="report-overlay" id="reportOverlay" style="display:none" onclick="closeReportDialog(event)">
+  <div class="report-dialog">
+    <div class="report-dialog-head">
+      <div class="rdh-logo">GAP Velocity AI</div>
+      <h3>Download PDF Report</h3>
+    </div>
+    <div class="report-dialog-body">
+      <div class="report-field">
+        <label for="reportFilename">File name</label>
+        <input type="text" id="reportFilename" placeholder="gap-velo-report" spellcheck="false">
+      </div>
+      <div class="report-note">Your browser will save the file to your default downloads folder. To choose a specific location, configure your browser to always ask where to save files.</div>
+      <div class="report-actions">
+        <button class="btn-cancel" onclick="closeReportDialog()">Cancel</button>
+        <button class="btn-download" onclick="confirmDownload()">&#8595; Download</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -520,8 +622,8 @@ function buildStacks() {
   prevBtn.className = 'stack-nav-btn';
   prevBtn.innerHTML = '&#8249;';
   prevBtn.title = 'Previous';
-  prevBtn.disabled = state.stackPage === 0;
-  prevBtn.onclick = () => { state.stackPage--; render(); };
+  prevBtn.disabled = false;
+  prevBtn.onclick = () => { state.stackPage = (state.stackPage - 1 + totalPages) % totalPages; render(); };
   nav.appendChild(prevBtn);
 
   const grid = document.createElement('div');
@@ -540,8 +642,8 @@ function buildStacks() {
   nextBtn.className = 'stack-nav-btn';
   nextBtn.innerHTML = '&#8250;';
   nextBtn.title = 'Next';
-  nextBtn.disabled = state.stackPage >= totalPages - 1;
-  nextBtn.onclick = () => { state.stackPage++; render(); };
+  nextBtn.disabled = false;
+  nextBtn.onclick = () => { state.stackPage = (state.stackPage + 1) % totalPages; render(); };
   nav.appendChild(nextBtn);
 
   root.appendChild(nav);
@@ -572,7 +674,7 @@ function toggleRisk(id) { state.expandedRisk = state.expandedRisk === id ? null 
 
 function render() {
   const r = calc(), s = STACKS[state.stack], d = DENSITY[state.density];
-  const savings = r.diy - r.pro, savPct = ((savings/r.diy)*100).toFixed(0);
+  const savings = r.diy - r.proAndRisk, savPct = ((savings/r.diy)*100).toFixed(0);
 
   buildStacks();
   buildDensity();
@@ -615,8 +717,12 @@ function render() {
   document.getElementById('proAndRisk').textContent = fmt$(r.proAndRisk);
   document.getElementById('proMeta').textContent = `${r.proMonths} months · proven methodology`;
   document.getElementById('proCplMeta').textContent = `$${r.proCpl.toFixed(2)} per line`;
-  document.getElementById('savingsAmount').textContent = `Save ${fmt$(savings)}`;
-  document.getElementById('savingsDetail').textContent = `${savPct}% less · ${r.months - r.proMonths} months faster`;
+  const savingsPositive = savings > 0;
+  document.getElementById('savingsBox').style.display = savingsPositive ? 'block' : 'none';
+  if (savingsPositive) {
+    document.getElementById('savingsAmount').textContent = `Save ${fmt$(savings)}`;
+    document.getElementById('savingsDetail').textContent = `${savPct}% less · ${r.months - r.proMonths} months faster`;
+  }
   document.getElementById('breakdownBtn').textContent = (state.breakdownOpen ? 'Hide' : 'Show') + ' breakdown ▾';
 
   const bp = document.getElementById('breakdownPanel');
@@ -642,14 +748,315 @@ function render() {
   }
 
   document.getElementById('summaryPanel').innerHTML = `
-    <p>With <strong>${r.lines.toLocaleString()} lines of ${s.label}</strong> at <strong>${d.label.toLowerCase()}</strong> density, your team would need <strong>${r.eng} engineers</strong> working <strong>${r.months} months</strong>. That's <strong class="red">$${r.cpl} per line</strong> — and <strong class="red">${fmt$(r.riskTotal)}</strong> of that is hidden risk from silent bugs, rework, and lost business logic that GenAI alone can't catch.</p>
-    <div class="footnote">These are <em>your</em> numbers. Adjust the sliders and see what changes.</div>`;
+    <div class="summary-grid">
+      <div class="summary-diy">
+        <div class="summary-tag">&#9888; DIY with GenAI</div>
+        <p>With <strong>${r.lines.toLocaleString()} lines of ${s.label}</strong> at <strong>${d.label.toLowerCase()}</strong> density, your team would need <strong>${r.eng} engineers</strong> working <strong>${r.months} months</strong>. That's <strong class="red">$${r.cpl} per line</strong> all-in — and <strong class="red">${fmt$(r.riskTotal)}</strong> of that is hidden risk from silent bugs, rework, and lost business logic that GenAI alone can't catch.</p>
+        <div class="footnote">Total DIY cost: <strong>${fmt$(r.diy)}</strong></div>
+      </div>
+      <div class="summary-velo">
+        <div class="summary-tag">&#10003; VELO — GAP Velocity AI</div>
+        <p>With VELO, the same <strong>${r.lines.toLocaleString()} lines of ${s.label}</strong> can be modernized in <strong class="green">${r.proMonths} months</strong>${(r.months - r.proMonths) > 0 ? ` — <strong class="green">${r.months - r.proMonths} months faster</strong> than DIY` : ''}. At <strong class="green">$${r.proCpl.toFixed(2)} per line</strong>, your risk is managed, methodology is proven, and your engineers stay focused on building value, not archaeology.</p>
+        <div class="footnote">VELO cost: <strong>${fmt$(r.proAndRisk)}</strong>${(r.diy - r.proAndRisk) > 0 ? ` &nbsp;·&nbsp; You save <strong class="red">${fmt$(r.diy - r.proAndRisk)}</strong>` : ''}</div>
+      </div>
+    </div>`;
 }
 
 document.getElementById('klocSlider').addEventListener('input', e => { state.kloc = +e.target.value; state.customEng = null; render(); });
 document.getElementById('costSlider').addEventListener('input', e => { state.cost = +e.target.value; render(); });
 document.getElementById('engSlider').addEventListener('input', e => { state.customEng = +e.target.value; render(); });
 render();
+
+function openReportDialog() {
+  if (!window.jspdf) { alert('PDF library is still loading — please try again in a moment.'); return; }
+  const suggested = `gap-velo-report-${state.stack}-${state.kloc}kloc`;
+  document.getElementById('reportFilename').value = suggested;
+  document.getElementById('reportOverlay').style.display = 'flex';
+  setTimeout(() => document.getElementById('reportFilename').select(), 50);
+}
+
+function closeReportDialog(e) {
+  if (e && e.target !== document.getElementById('reportOverlay')) return;
+  document.getElementById('reportOverlay').style.display = 'none';
+}
+
+function confirmDownload() {
+  const name = (document.getElementById('reportFilename').value.trim() || 'gap-velo-report').replace(/\.pdf$/i, '');
+  document.getElementById('reportOverlay').style.display = 'none';
+  generateReport(name);
+}
+
+function generateReport(filename) {
+  if (!window.jspdf) { alert('PDF library is still loading — please try again in a moment.'); return; }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+  const r = calc(), s = STACKS[state.stack], d = DENSITY[state.density];
+  const savings = r.diy - r.proAndRisk;
+  const savPct = Math.max(0, ((savings / r.diy) * 100)).toFixed(0);
+
+  const PW = 210, PH = 297, M = 14, CW = 182;
+
+  function h2r(h) { return [parseInt(h.slice(1,3),16), parseInt(h.slice(3,5),16), parseInt(h.slice(5,7),16)]; }
+  function f(h) { const [a,b,c]=h2r(h); doc.setFillColor(a,b,c); }
+  function k(h) { const [a,b,c]=h2r(h); doc.setDrawColor(a,b,c); }
+  function tx(h) { const [a,b,c]=h2r(h); doc.setTextColor(a,b,c); }
+
+  const B='#006489', DK='#453F3E', GR='#777373', LG='#D1D1D1', LLG='#E5E1E6',
+        YL='#FEBD12', BA1='#5497AE', BA2='#A5CAD6', CY='#18C1E5', GN='#43B686',
+        RD='#E54360', BG='#F7F8FA', WH='#FFFFFF', BD='#E8E8E8',
+        SV='#E8F8F0', SVB='#C6ECDB';
+
+  let y = 0;
+
+  function sectionLbl(txt) {
+    doc.setFontSize(7); doc.setFont('helvetica','bold'); tx(B);
+    doc.text(txt.toUpperCase(), M, y+4);
+    f(B); doc.rect(M, y+5.5, CW, 0.4, 'F');
+    y += 8;
+  }
+
+  // ── PAGE 1: HEADER ──────────────────────────────────────────────────────────
+  f(CY); doc.rect(0, 0, PW, 2, 'F');
+  f(B);  doc.rect(0, 2, PW, 44, 'F');
+
+  doc.setFontSize(7); doc.setFont('helvetica','bold'); tx(BA2);
+  doc.text('GAP VELOCITY AI', M, 12);
+
+  doc.setFontSize(20); doc.setFont('helvetica','bold'); tx(WH);
+  doc.text('DIY COST ', M, 24);
+  const pw0 = doc.getTextWidth('DIY COST ');
+  tx(YL); doc.text('REALITY CHECK', M + pw0, 24);
+
+  doc.setFontSize(8); doc.setFont('helvetica','normal'); tx(BA2);
+  doc.text(`Stack: ${s.label}  ·  ${fmtK(state.kloc)} lines  ·  ${d.label} complexity  ·  ${fmt$(state.cost)}/eng/yr`, M, 32);
+
+  doc.setFontSize(7); tx(BA1);
+  doc.text(`Generated: ${new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})}`, M, 38);
+
+  f(CY); doc.rect(0, 44, PW, 2, 'F');
+  y = 50;
+
+  // ── PARAMETERS ──────────────────────────────────────────────────────────────
+  sectionLbl('Parameters');
+  f(BG); doc.rect(M, y, CW, 22, 'F');
+  k(BD); doc.setLineWidth(0.3); doc.rect(M, y, CW, 22, 'S');
+
+  [
+    {lbl:'STACK',         val:s.label,               sub:`${s.risk}x risk factor`},
+    {lbl:'LINES OF CODE', val:fmtK(state.kloc),       sub:`${r.lines.toLocaleString()} lines`},
+    {lbl:'ENGINEER COST', val:fmt$(state.cost),        sub:'fully loaded / yr'},
+    {lbl:'COMPLEXITY',    val:d.label,                sub:`${d.factor}x effort`},
+  ].forEach((p, i) => {
+    const px = M + i * (CW/4) + 4;
+    if (i > 0) { k(BD); doc.setLineWidth(0.2); doc.line(M + i*(CW/4), y+3, M + i*(CW/4), y+19); }
+    doc.setFontSize(6);  doc.setFont('helvetica','bold');   tx(B);  doc.text(p.lbl, px, y+6);
+    doc.setFontSize(11); doc.setFont('helvetica','bold');   tx(DK); doc.text(p.val, px, y+14);
+    doc.setFontSize(6);  doc.setFont('helvetica','normal'); tx(GR); doc.text(p.sub, px, y+19);
+  });
+  y += 26;
+
+  // ── KEY METRICS ─────────────────────────────────────────────────────────────
+  sectionLbl('Key Metrics');
+  const sw = (CW - 9) / 4;
+  [
+    {lbl:'TOTAL LINES', val:r.lines.toLocaleString(),  sub:`${fmtK(state.kloc)} KLOC`,       accent:false},
+    {lbl:'ENG. HOURS',  val:r.hours.toLocaleString(),  sub:`${r.ehpk.toFixed(0)} hrs/KLOC`,  accent:false},
+    {lbl:'TEAM SIZE',   val:`${r.eng}`,                sub:`${r.months} months`,             accent:false},
+    {lbl:'COST / LINE', val:`$${r.cpl}`,               sub:'DIY all-in',                     accent:true},
+  ].forEach((st, i) => {
+    const sx = M + i * (sw + 3);
+    f(WH); doc.rect(sx, y, sw, 20, 'F');
+    k(BD); doc.setLineWidth(0.3); doc.rect(sx, y, sw, 20, 'S');
+    if (st.accent) { f(RD); doc.rect(sx, y, 1.5, 20, 'F'); }
+    const tx2 = sx + (st.accent ? 4 : 3);
+    doc.setFontSize(6);  doc.setFont('helvetica','bold');   tx(B);                   doc.text(st.lbl, tx2, y+5);
+    doc.setFontSize(13); doc.setFont('helvetica','bold');   tx(st.accent ? RD : DK); doc.text(st.val, tx2, y+13);
+    doc.setFontSize(6);  doc.setFont('helvetica','normal'); tx(GR);                  doc.text(st.sub, tx2, y+17.5);
+  });
+  y += 24;
+
+  // ── TEAM & TIMELINE ─────────────────────────────────────────────────────────
+  sectionLbl('Team & Timeline Estimate');
+  f(WH); doc.rect(M, y, CW, 28, 'F');
+  k(BD); doc.setLineWidth(0.3); doc.rect(M, y, CW, 28, 'S');
+
+  doc.setFontSize(6); doc.setFont('helvetica','bold'); tx(B);
+  doc.text('ENGINEERS REQUIRED', M+4, y+5);
+  doc.setFontSize(22); doc.setFont('helvetica','bold'); tx(DK);
+  doc.text(`${r.eng}`, M+4, y+17);
+  doc.setFontSize(6); doc.setFont('helvetica','normal'); tx(GR);
+  doc.text(`${fmt$(state.cost)}/yr  ·  ${r.hours.toLocaleString()} total hrs`, M+4, y+22);
+
+  k(BD); doc.setLineWidth(0.2); doc.line(M+38, y+4, M+38, y+24);
+
+  doc.setFontSize(6); doc.setFont('helvetica','bold'); tx(B);
+  doc.text('DURATION', M+42, y+5);
+  doc.setFontSize(22); doc.setFont('helvetica','bold'); tx(DK);
+  doc.text(`${r.months}`, M+42, y+17);
+  const mw = doc.getTextWidth(`${r.months}`);
+  doc.setFontSize(9); doc.setFont('helvetica','bold'); tx(GR);
+  doc.text('months', M+42+mw+1, y+17);
+  doc.setFontSize(6); doc.setFont('helvetica','normal'); tx(GR);
+  doc.text(`Approx. ${(r.months/12).toFixed(1)} yrs  ·  ${r.ehpk.toFixed(0)} hrs/KLOC`, M+42, y+22);
+
+  y += 32;
+
+  // ── COST COMPARISON ─────────────────────────────────────────────────────────
+  sectionLbl('Cost Comparison');
+  const cH = 60, hW = (CW-4)/2;
+
+  // DIY card
+  f(WH); doc.rect(M, y, hW, cH, 'F');
+  k(RD); doc.setLineWidth(0.5); doc.rect(M, y, hW, cH, 'S');
+  f(RD); doc.rect(M, y, hW, 2, 'F');
+  f(RD); doc.roundedRect(M+hW-22, y+3.5, 20, 5, 1, 1, 'F');
+  doc.setFontSize(5); doc.setFont('helvetica','bold'); tx(WH);
+  doc.text('HIGH RISK', M+hW-12, y+7, {align:'center'});
+  doc.setFontSize(7); doc.setFont('helvetica','bold'); tx(RD);
+  doc.text('DIY WITH GENAI', M+4, y+11);
+  doc.setFontSize(20); doc.setFont('helvetica','bold'); tx(RD);
+  doc.text(fmt$(r.diy), M+4, y+22);
+  doc.setFontSize(6.5); doc.setFont('helvetica','normal'); tx(GR);
+  doc.text(`${r.months} months  ·  ${r.eng} engineers  ·  ${fmtK(state.kloc)} lines`, M+4, y+27);
+  k(BD); doc.setLineWidth(0.2); doc.line(M+3, y+30, M+hW-3, y+30);
+  [
+    ['Base engineering cost', fmt$(r.baseCost)],
+    ['GenAI tooling & APIs',  fmt$(r.aiCost)],
+    ['Last Mile / Risk costs',fmt$(r.riskTotal)],
+  ].forEach(([lbl,val], i) => {
+    const iy = y+36+i*5.5;
+    doc.setFontSize(6.5); doc.setFont('helvetica','normal'); tx(DK); doc.text(lbl, M+4, iy);
+    doc.setFont('helvetica','bold'); doc.text(val, M+hW-3, iy, {align:'right'});
+  });
+  k(LG); doc.setLineWidth(0.3); doc.line(M+3, y+53, M+hW-3, y+53);
+  doc.setFontSize(7); doc.setFont('helvetica','bold'); tx(RD);
+  doc.text('TOTAL', M+4, y+58); doc.text(fmt$(r.diy), M+hW-3, y+58, {align:'right'});
+
+  // VELO card
+  const vx = M+hW+4;
+  f(WH); doc.rect(vx, y, hW, cH, 'F');
+  k(GN); doc.setLineWidth(0.5); doc.rect(vx, y, hW, cH, 'S');
+  f(GN); doc.rect(vx, y, hW, 2, 'F');
+  f(GN); doc.roundedRect(vx+hW-28, y+3.5, 26, 5, 1, 1, 'F');
+  doc.setFontSize(5); doc.setFont('helvetica','bold'); tx(WH);
+  doc.text('MANAGED RISK', vx+hW-15, y+7, {align:'center'});
+  doc.setFontSize(7); doc.setFont('helvetica','bold'); tx(GN);
+  doc.text('VELO — GAP VELOCITY AI', vx+4, y+11);
+  doc.setFontSize(6); doc.setFont('helvetica','bold'); tx(YL);
+  doc.text('VELO PRICING', vx+4, y+16);
+  doc.setFontSize(15); doc.setFont('helvetica','bold'); tx(YL);
+  doc.text(fmt$(r.pro), vx+4, y+24);
+  doc.setFontSize(6); doc.setFont('helvetica','bold'); tx(GN);
+  doc.text('VELO PRICING + CODE COMPLEXITY', vx+4, y+29);
+  doc.setFontSize(15); doc.setFont('helvetica','bold'); tx(GN);
+  doc.text(fmt$(r.proAndRisk), vx+4, y+37);
+  doc.setFontSize(6.5); doc.setFont('helvetica','normal'); tx(GR);
+  doc.text(`${r.proMonths} months  ·  proven methodology`, vx+4, y+42);
+  doc.text(`$${r.proCpl.toFixed(2)} per line`, vx+4, y+46);
+  if (savings > 0) {
+    f(SV); doc.rect(vx+3, y+49, hW-6, 9, 'F');
+    k(SVB); doc.setLineWidth(0.3); doc.rect(vx+3, y+49, hW-6, 9, 'S');
+    doc.setFontSize(9); doc.setFont('helvetica','bold'); tx(GN);
+    doc.text(`Save ${fmt$(savings)}`, vx+6, y+54.5);
+    doc.setFontSize(6); doc.setFont('helvetica','normal'); tx(GR);
+    doc.text(`${savPct}% less  ·  ${r.months - r.proMonths} months faster`, vx+6, y+57.5);
+  }
+
+  y += cH + 4;
+
+  // ── PAGE 2 ───────────────────────────────────────────────────────────────────
+  doc.addPage();
+  f(CY); doc.rect(0, 0, PW, 1.5, 'F');
+  f(B);  doc.rect(0, 1.5, PW, 6, 'F');
+  doc.setFontSize(6); doc.setFont('helvetica','bold'); tx(BA2);
+  doc.text('GAP VELOCITY AI  ·  DIY COST REALITY CHECK', M, 5.5);
+  tx(BA1);
+  doc.text(`${s.label}  ·  ${fmtK(state.kloc)} lines  ·  ${d.label}  ·  ${fmt$(state.cost)}/yr`, PW-M, 5.5, {align:'right'});
+  y = 13;
+
+  // ── LAST MILE RISK BREAKDOWN ─────────────────────────────────────────────────
+  sectionLbl('Last Mile Risk Breakdown');
+  const rRH = 17, rBodyH = r.risks.length * rRH + 10, rBlockH = rBodyH + 9;
+  f(WH); doc.rect(M, y, CW, rBlockH, 'F');
+  k(BD); doc.setLineWidth(0.3); doc.rect(M, y, CW, rBlockH, 'S');
+  doc.setFontSize(7); doc.setFont('helvetica','normal'); tx(GR);
+  doc.text(`Adjusted for ${s.label} (${s.risk}x risk factor) + ${d.label} density (${d.factor}x effort)`, M+3, y+6);
+
+  const maxRC = Math.max(...r.risks.map(x=>x.cost));
+  let ry = y + 10;
+  r.risks.forEach((ri, i) => {
+    if (i>0) { k(BD); doc.setLineWidth(0.2); doc.line(M+3, ry, M+CW-3, ry); }
+    doc.setFontSize(8); doc.setFont('helvetica','bold'); tx(DK);
+    doc.text(ri.label, M+4, ry+5);
+    doc.setFontSize(6); doc.setFont('helvetica','normal'); tx(GR);
+    const dLines = doc.splitTextToSize(ri.desc, CW-52);
+    doc.text(dLines.slice(0,2), M+4, ry+10);
+    const bW = Math.max(2, (ri.cost/maxRC)*28);
+    const bC = ri.cost>200000 ? RD : ri.cost>100000 ? YL : GN;
+    f(bC); doc.rect(M+CW-40, ry+3, bW, 3.5, 'F');
+    doc.setFontSize(9); doc.setFont('helvetica','bold'); tx(DK);
+    doc.text(fmt$(ri.cost), M+CW-3, ry+6, {align:'right'});
+    doc.setFontSize(5.5); doc.setFont('helvetica','normal'); tx(LG);
+    doc.text(`${(ri.pct*100).toFixed(0)}% of base cost`, M+CW-3, ry+11, {align:'right'});
+    ry += rRH;
+  });
+  f(BG); doc.rect(M, ry, CW, 9, 'F');
+  k(BD); doc.setLineWidth(0.2); doc.rect(M, ry, CW, 9, 'S');
+  doc.setFontSize(7.5); doc.setFont('helvetica','bold'); tx(DK);
+  doc.text('TOTAL LAST MILE COSTS', M+4, ry+6);
+  tx(RD); doc.text(fmt$(r.riskTotal), M+CW-3, ry+6, {align:'right'});
+  y += rBlockH + 8;
+
+  // ── SUMMARY ─────────────────────────────────────────────────────────────────
+  sectionLbl('Summary');
+  const hS = (CW - 3) / 2;
+  const diyTxt = `With ${r.lines.toLocaleString()} lines of ${s.label} at ${d.label.toLowerCase()} density, your team would need ${r.eng} engineers working ${r.months} months. That's $${r.cpl} per line all-in — and ${fmt$(r.riskTotal)} of that is hidden risk from silent bugs, rework, and lost business logic that GenAI alone can't catch.`;
+  const veloTxt = `With VELO, the same ${r.lines.toLocaleString()} lines of ${s.label} can be modernized in ${r.proMonths} months — ${r.months - r.proMonths} months faster than DIY. At $${r.proCpl.toFixed(2)} per line, your risk is managed, methodology is proven, and your engineers stay focused on building value, not archaeology.`;
+  doc.setFontSize(7.5); doc.setFont('helvetica','normal');
+  const diyLines = doc.splitTextToSize(diyTxt, hS - 8);
+  const veloLines = doc.splitTextToSize(veloTxt, hS - 8);
+  const sH = Math.max(44, Math.max(diyLines.length, veloLines.length) * 4.8 + 24);
+
+  // DIY summary panel
+  f(DK); doc.rect(M, y, hS, sH, 'F');
+  f(RD); doc.rect(M, y, hS, 2, 'F');
+  doc.setFontSize(6); doc.setFont('helvetica','bold'); tx(RD);
+  doc.text('⚠ DIY WITH GENAI', M+4, y+8);
+  doc.setFontSize(7.5); doc.setFont('helvetica','normal'); tx(BA2);
+  doc.text(diyLines, M+4, y+14);
+  doc.setFontSize(6.5); doc.setFont('helvetica','bold'); tx(WH);
+  doc.text(`Total DIY cost: ${fmt$(r.diy)}`, M+4, y+sH-5);
+
+  // VELO summary panel
+  const vsx = M + hS + 3;
+  f(B); doc.rect(vsx, y, hS, sH, 'F');
+  f(CY); doc.rect(vsx, y, hS, 2, 'F');
+  f(CY); doc.rect(vsx, y+sH-2, hS, 2, 'F');
+  doc.setFontSize(6); doc.setFont('helvetica','bold'); tx(CY);
+  doc.text('✓ VELO — GAP VELOCITY AI', vsx+4, y+8);
+  doc.setFontSize(7.5); doc.setFont('helvetica','normal'); tx(BA2);
+  doc.text(veloLines, vsx+4, y+14);
+  doc.setFontSize(6.5); doc.setFont('helvetica','bold'); tx(WH);
+  doc.text(`VELO cost: ${fmt$(r.proAndRisk)}${(r.diy - r.proAndRisk) > 0 ? `  ·  You save: ${fmt$(r.diy - r.proAndRisk)}` : ''}`, vsx+4, y+sH-5);
+
+  // ── FOOTER on all pages ──────────────────────────────────────────────────────
+  const np = doc.getNumberOfPages();
+  for (let i=1; i<=np; i++) {
+    doc.setPage(i);
+    f(LLG); doc.rect(0, PH-8, PW, 8, 'F');
+    f(CY);  doc.rect(0, PH-8, PW, 0.8, 'F');
+    doc.setFontSize(6); doc.setFont('helvetica','normal'); tx(GR);
+    doc.text('GAP Velocity AI  ·  DIY Cost Reality Check', M, PH-3);
+    tx(LG);
+    doc.text(
+      `Page ${i} of ${np}  ·  ${new Date().toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'})}`,
+      PW-M, PH-3, {align:'right'}
+    );
+  }
+
+  doc.save(`${filename || 'gap-velo-report'}.pdf`);
+}
 </script>
 </body>
 </html>
