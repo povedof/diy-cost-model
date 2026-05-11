@@ -56,16 +56,8 @@
   .section-label { font-size: 11px; color: var(--gap-blue); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 12px; font-weight: 700; }
 
   /* Stack selector */
-  .stack-nav { display: flex; align-items: stretch; gap: 10px; margin-bottom: 8px; }
-  .stack-nav-btn {
-    flex-shrink: 0; width: 36px; background: var(--gap-white); border: 2px solid var(--gap-light-gray);
-    border-radius: 8px; cursor: pointer; font-size: 20px; color: var(--gap-blue);
-    display: flex; align-items: center; justify-content: center; transition: all 0.2s;
-  }
-  .stack-nav-btn:hover:not(:disabled) { border-color: var(--gap-blue); background: var(--gap-blue); color: var(--gap-white); }
-  .stack-nav-btn:disabled { color: var(--gap-light-gray); cursor: default; border-color: #F0F0F0; }
-  .stack-buttons { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; flex: 1; }
-  .stack-nav-indicator { font-size: 11px; color: var(--gap-gray); font-weight: 700; margin-bottom: 8px; }
+  .stack-buttons { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 8px; }
+  @media (max-width: 700px) { .stack-buttons { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   .stack-btn {
     min-width: 0; padding: 16px; background: var(--gap-white); border: 2px solid var(--gap-light-gray);
     border-radius: 8px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 6px;
@@ -565,7 +557,7 @@ const costDataVELO = {
     }
 };
 
-let state = { stack:"vb6", kloc:200, cost:150000, density:1, breakdownOpen:false, expandedRisk:null, customEng: null, stackPage: 0 };
+let state = { stack:"vb6", kloc:200, cost:150000, density:1, breakdownOpen:false, expandedRisk:null, customEng: null };
 
 function fmt$(n) { return n>=1e6 ? `$${(n/1e6).toFixed(1)}M` : n>=1e3 ? `$${(n/1e3).toFixed(0)}K` : `$${n.toFixed(0)}`; }
 function fmtK(v) { return v>=1000 ? `${(v/1000).toFixed(v>=10000?0:1)}M` : `${v}K`; }
@@ -620,28 +612,12 @@ function calculateVELOCost(technology, linesOfCode) {
 
 function buildStacks() {
   const keys = Object.keys(STACKS);
-  const PAGE_SIZE = 4;
-  const totalPages = Math.ceil(keys.length / PAGE_SIZE);
-  const pageKeys = keys.slice(state.stackPage * PAGE_SIZE, (state.stackPage + 1) * PAGE_SIZE);
-
   const root = document.getElementById('stackSelector');
   root.innerHTML = '';
 
-  // Nav row
-  const nav = document.createElement('div');
-  nav.className = 'stack-nav';
-
-  const prevBtn = document.createElement('button');
-  prevBtn.className = 'stack-nav-btn';
-  prevBtn.innerHTML = '&#8249;';
-  prevBtn.title = 'Previous';
-  prevBtn.disabled = false;
-  prevBtn.onclick = () => { state.stackPage = (state.stackPage - 1 + totalPages) % totalPages; render(); };
-  nav.appendChild(prevBtn);
-
   const grid = document.createElement('div');
   grid.className = 'stack-buttons';
-  pageKeys.forEach(k => {
+  keys.forEach(k => {
     const s = STACKS[k];
     const btn = document.createElement('button');
     btn.className = 'stack-btn' + (state.stack === k ? ' active' : '');
@@ -649,22 +625,7 @@ function buildStacks() {
     btn.onclick = () => { state.stack = k; render(); };
     grid.appendChild(btn);
   });
-  nav.appendChild(grid);
-
-  const nextBtn = document.createElement('button');
-  nextBtn.className = 'stack-nav-btn';
-  nextBtn.innerHTML = '&#8250;';
-  nextBtn.title = 'Next';
-  nextBtn.disabled = false;
-  nextBtn.onclick = () => { state.stackPage = (state.stackPage + 1) % totalPages; render(); };
-  nav.appendChild(nextBtn);
-
-  root.appendChild(nav);
-
-  const indicator = document.createElement('div');
-  indicator.className = 'stack-nav-indicator';
-  indicator.textContent = `${state.stackPage + 1} / ${totalPages}`;
-  root.appendChild(indicator);
+  root.appendChild(grid);
 
   document.getElementById('stackDesc').textContent = STACKS[state.stack].desc;
 }
