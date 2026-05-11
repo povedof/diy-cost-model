@@ -91,6 +91,15 @@
   .slider-sub { font-size: 11px; color: var(--gap-gray); margin-bottom: 8px; }
   input[type="range"] { width: 100%; accent-color: var(--gap-blue); height: 6px; cursor: pointer; }
   .slider-range { display: flex; justify-content: space-between; font-size: 10px; color: var(--gap-light-gray); margin-top: 4px; font-weight: 700; }
+  .kloc-text-row { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+  .kloc-text-label { font-size: 11px; color: var(--gap-gray); white-space: nowrap; }
+  .kloc-text-input {
+    width: 120px; padding: 6px 10px; border: 2px solid var(--gap-light-gray);
+    border-radius: 6px; font-size: 13px; font-family: 'Lato', sans-serif;
+    color: var(--gap-dark); outline: none; transition: border-color 0.2s; font-weight: 700;
+  }
+  .kloc-text-input:focus { border-color: var(--gap-blue); }
+  .kloc-text-input.input-error { border-color: var(--gap-red); }
 
   /* Density */
   .density-buttons { display: flex; gap: 8px; margin-bottom: 10px; }
@@ -281,8 +290,12 @@
           <span class="slider-value" id="klocValue"></span>
         </div>
         <div class="slider-sub">Total KLOC across all legacy modules (1K = 1,000 lines)</div>
-        <input type="range" id="klocSlider" min="10" max="5000" step="10" value="200">
+        <input type="range" id="klocSlider" min="10" max="5000" step="5" value="200">
         <div class="slider-range"><span>10K lines</span><span>5M lines</span></div>
+        <div class="kloc-text-row">
+          <span class="kloc-text-label">or type exact:</span>
+          <input type="text" id="klocTextInput" class="kloc-text-input" placeholder="e.g. 200K or 1.5M">
+        </div>
       </div>
       <div class="slider-group">
         <div class="slider-header">
@@ -563,12 +576,12 @@ function calc() {
   const hours = Math.round(state.kloc * ehpk);
   const recommendedEng = Math.max(2, Math.ceil(hours / 1800));
   const eng = state.customEng !== null ? state.customEng : recommendedEng;
-  const baseCost = eng * state.cost;
+  const months = Math.max(3, Math.ceil((hours / eng) / 140));
+  const baseCost = Math.round(eng * state.cost * (months / 12));
   const aiCost = Math.round(state.kloc * 15);
   const risks = RISKS.map(r => ({ ...r, cost: Math.round(baseCost * r.pct * s.risk) }));
   const riskTotal = risks.reduce((s,r) => s + r.cost, 0);
   const diy = baseCost + aiCost + riskTotal;
-  const months = Math.max(3, Math.ceil((hours / eng) / 140));
   const velo = calculateVELOCost(state.stack, state.kloc * 1000);
   const pro = velo.totalCost;
   const proAndRisk = pro * DENSITY[state.density].factor;
@@ -681,6 +694,9 @@ function render() {
 
   document.getElementById('klocValue').textContent = `${fmtK(state.kloc)} lines`;
   document.getElementById('costValue').textContent = fmt$(state.cost);
+  const klocTxt = document.getElementById('klocTextInput');
+  if (document.activeElement !== klocTxt) klocTxt.value = fmtK(state.kloc);
+  document.getElementById('klocSlider').value = state.kloc;
 
   document.getElementById('statsRow').innerHTML = `
     <div class="stat-card"><div class="st-label">Total Lines</div><div class="st-value">${r.lines.toLocaleString()}</div><div class="st-sub">${fmtK(state.kloc)} KLOC</div></div>
@@ -729,7 +745,7 @@ function render() {
   bp.style.display = state.breakdownOpen ? 'block' : 'none';
   if (state.breakdownOpen) {
     let html = `<div class="section-label" style="margin-bottom:8px">DIY Cost Breakdown — ${fmtK(state.kloc)} lines of ${s.label}</div>`;
-    html += `<div class="breakdown-row"><div><span class="row-label">Base engineering cost</span><div class="row-sub">${r.eng} engineers × ${fmt$(state.cost)}/yr</div></div><span class="row-value">${fmt$(r.baseCost)}</span></div>`;
+    html += `<div class="breakdown-row"><div><span class="row-label">Base engineering cost</span><div class="row-sub">${r.eng} engineers × ${fmt$(state.cost)}/yr × ${r.months} months</div></div><span class="row-value">${fmt$(r.baseCost)}</span></div>`;
     html += `<div class="breakdown-row"><div><span class="row-label">GenAI tooling & API costs</span><div class="row-sub">~$15 per KLOC in token costs, tooling licenses</div></div><span class="row-value">${fmt$(r.aiCost)}</span></div>`;
     html += `<div style="margin-top:16px;margin-bottom:8px"><div style="font-size:11px;color:var(--gap-red);letter-spacing:0.15em;text-transform:uppercase;font-weight:700">Last Mile Costs — ${fmt$(r.riskTotal)}</div><div style="font-size:11px;color:var(--gap-gray);margin-top:4px">Adjusted for ${s.label} (${s.risk}x risk) + ${d.label} density (${d.factor}x effort). Click any row.</div></div>`;
     r.risks.forEach(ri => {
@@ -764,6 +780,53 @@ function render() {
 
 document.getElementById('klocSlider').addEventListener('input', e => { state.kloc = +e.target.value; state.customEng = null; render(); });
 document.getElementById('costSlider').addEventListener('input', e => { state.cost = +e.target.value; render(); });
+
+(function() {
+  const klocText = document.getElementById('klocTextInput');
+  function parseKlocInput(raw) {
+    const s = raw.trim().replace(/,/g, '');
+    if (!s) return null;
+    const m = s.match(/^([\d.]+)\s*([KkMm]?)$/);
+    if (!m) return null;
+    let v = parseFloat(m[1]);
+    if (isNaN(v)) return null;
+    const suffix = m[2].toUpperCase();
+    if (suffix === 'M') v = Math.round(v * 1000);
+    else if (suffix === 'K') v = Math.round(v);
+    else v = Math.round(v / 1000); // raw lines → KLOC
+    if (v < 10) v = 10;
+    if (v > 5000) v = 5000;
+    return v;
+  }
+  klocText.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      const v = parseKlocInput(klocText.value);
+      if (v !== null) {
+        klocText.classList.remove('input-error');
+        state.kloc = v;
+        state.customEng = null;
+        render();
+        klocText.blur();
+      } else {
+        klocText.classList.add('input-error');
+      }
+    }
+  });
+  klocText.addEventListener('blur', () => {
+    const v = parseKlocInput(klocText.value);
+    if (v !== null) {
+      klocText.classList.remove('input-error');
+      state.kloc = v;
+      state.customEng = null;
+      render();
+    } else if (klocText.value.trim() !== '') {
+      klocText.classList.add('input-error');
+    } else {
+      klocText.classList.remove('input-error');
+    }
+  });
+  klocText.addEventListener('focus', () => klocText.classList.remove('input-error'));
+})();
 document.getElementById('engSlider').addEventListener('input', e => { state.customEng = +e.target.value; render(); });
 render();
 
